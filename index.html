@@ -1,0 +1,605 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Password Strength Analyzer</title>
+<style>
+  :root{
+    --bg: #0b1020;
+    --panel: #121831;
+    --panel-2:#0f1530;
+    --text: #e8ebf7;
+    --muted:#b7bed8;
+    --accent: 200; /* hue for accents */
+    --ok: 150;
+    --warn: 40;
+    --bad: 0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 80% -20%, rgba(90,120,255,.2), transparent 60%),
+      radial-gradient(900px 600px at 10% 110%, rgba(98,255,218,.15), transparent 60%),
+      linear-gradient(180deg, #0b1020, #0a0f1f 40%, #090e1c);
+    display:grid;
+    place-items:center;
+    padding:24px;
+    transition: background 400ms ease;
+  }
+  .container{
+    width: min(900px, 100%);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:16px;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,.45),
+      inset 0 1px 0 rgba(255,255,255,.04);
+    overflow:hidden;
+  }
+  header{
+    padding:20px 22px 10px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .title{
+    font-weight:700; letter-spacing:.2px; font-size:1.05rem; color:#eef1ff;
+  }
+  .chip{
+    font-size:.8rem; color:#d3d9ff; opacity:.9;
+    border:1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.03);
+    padding:6px 10px; border-radius:999px;
+  }
+  main{ padding:22px; display:grid; gap:18px}
+  .row{ display:grid; gap:12px}
+  label{
+    font-size:.9rem; color:var(--muted);
+  }
+  .input-wrap{
+    position:relative;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex; align-items:center; gap:10px;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .input-wrap:focus-within{
+    border-color: rgba(120,170,255,.6);
+    box-shadow: 0 0 0 8px rgba(120,170,255,.08);
+  }
+  input[type="password"], input[type="text"]{
+    background:transparent; border:0; outline:0; color:#fff; flex:1;
+    font-size:1.05rem; letter-spacing:.2px; padding:8px 6px;
+  }
+  .btn{
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.06);
+    color:#eaf0ff; font-size:.9rem; padding:8px 10px; border-radius:10px;
+    cursor:pointer; transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    user-select:none;
+  }
+  .btn:hover{ background: rgba(255,255,255,.12) }
+  .btn:active{ transform: translateY(1px) }
+
+  .meter{
+    position:relative; height:14px; border-radius:999px; overflow:hidden;
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .bar{
+    height:100%; width:0%;
+    background: linear-gradient(90deg,
+      #ff4d4d 0%,
+      #ff884d 25%,
+      #ffd84d 45%,
+      #b6f36b 70%,
+      #41f39f 100%);
+    filter: saturate(1.2);
+    transition: width 220ms ease, filter 200ms ease;
+  }
+  .meter-grid{
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(90deg, transparent, transparent 10%, rgba(255,255,255,.04) 10%, rgba(255,255,255,.04) 10.5%);
+    pointer-events:none;
+  }
+
+  .stats{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+    gap:10px;
+  }
+  .card{
+    background: rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:12px; padding:12px;
+    min-height:64px;
+  }
+  .card h4{
+    margin:0 0 6px; font-size:.85rem; color:#cdd5ff; font-weight:600; letter-spacing:.2px;
+  }
+  .big{
+    font-size:1.05rem; font-weight:700; color:#eef1ff;
+  }
+  .muted{ color:#aeb6d3; font-size:.9rem }
+  .list{
+    display:grid; gap:8px; margin:6px 0 0; padding-left:18px;
+  }
+  .list li{ margin:0; color:#cbd3ee; font-size:.92rem }
+  .pill{
+    display:inline-block; padding:2px 8px; border-radius:999px; font-size:.8rem; font-weight:700;
+    border:1px solid rgba(255,255,255,.2);
+  }
+
+  .score-badge{
+    font-variant-numeric: tabular-nums;
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.15);
+    padding:8px 10px; border-radius:10px; width:max-content;
+  }
+
+  .hint{
+    color:#c6cbe3; font-size:.92rem;
+    background: rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:10px; padding:10px 12px;
+  }
+
+  /* dynamic background pulse on strength */
+  .pulse{
+    position: fixed; inset:0; pointer-events:none;
+    opacity:.0; transition: opacity 300ms ease;
+  }
+  .pulse.active{ opacity:.2 }
+
+  /* weak shake when super weak */
+  .shake{
+    animation: shake .24s ease-in-out 0s 1;
+  }
+  @keyframes shake {
+    0%{ transform: translateX(0) }
+    25%{ transform: translateX(-4px) }
+    50%{ transform: translateX(4px) }
+    75%{ transform: translateX(-2px) }
+    100%{ transform: translateX(0) }
+  }
+
+  @media (max-width: 780px){
+    .stats{ grid-template-columns: 1fr }
+    header{ gap:8px }
+  }
+</style>
+</head>
+<body>
+<canvas class="pulse" id="pulse"></canvas>
+<div class="container" id="panel">
+  <header>
+    <div class="title">Password Strength Analyzer</div>
+    <span class="chip">Client-side • No data leaves your browser</span>
+  </header>
+  <main>
+    <div class="row">
+      <label for="pwd">Enter password</label>
+      <div class="input-wrap" id="inputWrap">
+        <input id="pwd" type="password" autocomplete="new-password" aria-describedby="desc" autofocus/>
+        <button class="btn" id="toggle">Show</button>
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn" id="generate">Generate</button>
+      </div>
+      <div class="meter" aria-hidden="true">
+        <div class="bar" id="bar"></div>
+        <div class="meter-grid"></div>
+      </div>
+      <div class="score-badge" id="badge">
+        <span id="label">Strength: —</span>
+        <span class="pill" id="scorePill">0 / 100</span>
+      </div>
+      <div class="hint" id="feedback">Start typing to analyze your password.</div>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <h4>Entropy (bits)</h4>
+        <div class="big" id="entropy">—</div>
+        <div class="muted" id="pool">Char set: —</div>
+      </div>
+      <div class="card">
+        <h4>Estimated crack time*</h4>
+        <div class="big" id="time">—</div>
+        <div class="muted">Assumes 10B guesses/sec (offline GPU)</div>
+      </div>
+      <div class="card">
+        <h4>Findings</h4>
+        <ul class="list" id="findings">
+          <li>—</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Score Breakdown</h4>
+        <ul class="list" id="breakdown">
+          <li>—</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ========================
+   Heuristic strength model
+   ========================
+   Goal: practical, fast, no external libs.
+   - Score 0–100 from:
+     • Length (0–40, scaled logarithmically for better logic)
+     • Charset variety (0–20)
+     • Entropy bonus (0–25)
+     • Pattern penalties / bonuses (±)
+     • Dictionary/common-phrase checks (penalty)
+*/
+
+const commonList = new Set([
+  "password","123456","123456789","qwerty","qwertyuiop","111111","letmein","admin","welcome","iloveyou",
+  "dragon","sunshine","monkey","football","login","abc123","password1","zaq12wsx","passw0rd","000000",
+  "administrator","guest","user","test","p@ssw0rd","danmark","denmark","love","secret","master",
+  "12345","1234","123","abc","abcd","hello","princess","charlie","flower","superman","batman",
+  "trustno1","ninja","mustang","iloveme","shadow","baseball","michael","jennifer","jordan","hunter"
+]);
+
+const sequences = [
+  "abcdefghijklmnopqrstuvwxyz","qwertyuiopasdfghjklzxcvbnm",
+  "0123456789","!@#$%^&*()_+",
+  "qazwsxedcrfvtgbyhnujmikolp" // additional keyboard pattern
+];
+
+const commonSubs = /p[@a4]ssw[0o]rd|[l1]3tm31n|4dm1n|w3lc0m3|1l0v3y0u/i;
+
+const el = {
+  pwd: document.getElementById('pwd'),
+  bar: document.getElementById('bar'),
+  label: document.getElementById('label'),
+  scorePill: document.getElementById('scorePill'),
+  feedback: document.getElementById('feedback'),
+  entropy: document.getElementById('entropy'),
+  pool: document.getElementById('pool'),
+  time: document.getElementById('time'),
+  findings: document.getElementById('findings'),
+  breakdown: document.getElementById('breakdown'),
+  inputWrap: document.getElementById('inputWrap'),
+  toggle: document.getElementById('toggle'),
+  copy: document.getElementById('copy'),
+  gen: document.getElementById('generate'),
+  pulse: document.getElementById('pulse'),
+};
+
+function analyze(pw){
+  const n = pw.length;
+  let score = 0;
+  const tips = [];
+  let penalties = 0;
+
+  // Character classes
+  const hasLower = /[a-z]/.test(pw);
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasDigit = /\d/.test(pw);
+  const hasSymbol = /[^A-Za-z0-9]/.test(pw);
+
+  // Charset size
+  let pool = 0;
+  if (hasLower) pool += 26;
+  if (hasUpper) pool += 26;
+  if (hasDigit) pool += 10;
+  if (hasSymbol) pool += 32; // more precise
+
+  // Quick flags
+  const uniqueChars = new Set(pw.split('')).size;
+  const repeatRatio = uniqueChars / Math.max(n,1);
+  const isCommon = commonList.has(pw.toLowerCase());
+
+  // Length (up to 40 pts, logarithmic for diminishing returns)
+  const lengthScore = Math.min(40, Math.floor(10 * Math.log2(Math.max(n, 1)) + 5 * (n / 10)));
+
+  // Variety (up to 20 pts)
+  const variety = [hasLower,hasUpper,hasDigit,hasSymbol].filter(Boolean).length;
+  const varietyScore = [0,5,12,18,20][variety];
+
+  // Entropy estimate (up to 25 pts bonus)
+  const entropyBits = n > 0 && pool > 0 ? (n * Math.log2(pool)) : 0;
+  const entropyBonus = Math.min(25, Math.floor(entropyBits / 5)); // adjusted for better scaling
+
+  // Penalties: dictionary, sequences, repeats
+  if (isCommon) {
+    penalties -= 40;
+    tips.push("Avoid very common passwords.");
+  }
+
+  if (commonSubs.test(pw)) {
+    penalties -= 20;
+    tips.push("Avoid common substitutions (e.g., p@ssw0rd).");
+  }
+
+  // Sequential runs
+  const lowered = pw.toLowerCase();
+  let hasSeq = false;
+  for (const seq of sequences){
+    for (let i=0;i<=seq.length-3;i++){ // min 3 chars
+      const s = seq.slice(i,i+3);
+      if (lowered.includes(s) || lowered.includes([...s].reverse().join(''))){
+        penalties -= 15;
+        tips.push("Avoid obvious sequences (e.g., abc, 123, qwe).");
+        hasSeq = true;
+        break;
+      }
+    }
+    if (hasSeq) break;
+  }
+
+  // Repeated char runs
+  if (/(.)\1{3,}/.test(pw)){ // stricter, 3+ repeats
+    penalties -= 10;
+    tips.push("Reduce long repeated characters (aaaa, 1111).");
+  }
+
+  // Repeated patterns (e.g., abcabc)
+  if (n >= 6 && pw.slice(0, Math.floor(n/2)) === pw.slice(Math.floor(n/2))) {
+    penalties -= 15;
+    tips.push("Avoid repeated patterns (e.g., passpass).");
+  }
+
+  // Keyboard proximity (expanded)
+  if (/(qwerty|asdf|zxcv|qaz|plm|okn)/i.test(pw)){
+    penalties -= 10;
+    tips.push("Avoid keyboard walk patterns (qwerty/asdf).");
+  }
+
+  // Date-like patterns (rough)
+  if (/\d{4}/.test(pw) && (pw.match(/\d{4}/)[0] > 1900 && pw.match(/\d{4}/)[0] < 2100)) {
+    penalties -= 8;
+    tips.push("Avoid using years or dates.");
+  }
+
+  // Short + low variety special penalty
+  if (n < 8 && variety < 3){
+    penalties -= 20;
+  }
+
+  // Bonus for high uniqueness
+  if (repeatRatio > 0.8 && n > 12) {
+    score += 5; // small bonus for diverse chars
+  }
+
+  // Aggregate score
+  score = lengthScore + varietyScore + entropyBonus + penalties;
+
+  // Ensure bounds
+  score = Math.max(0, Math.min(100, score));
+
+  // Strength label
+  let label = "Very Weak", hue = 0;
+  if (score >= 85){ label = "Very Strong"; hue = 150; }
+  else if (score >= 70){ label = "Strong"; hue = 130; }
+  else if (score >= 50){ label = "Moderate"; hue = 80; }
+  else if (score >= 30){ label = "Weak"; hue = 30; }
+  else { label = "Very Weak"; hue = 0; }
+
+  // Friendly tips (if none so far)
+  if (n === 0){
+    tips.splice(0, tips.length, "Start typing to analyze your password.");
+  } else {
+    if (n < 12) tips.push("Increase length to 12–20+ characters.");
+    if (!hasUpper) tips.push("Add uppercase letters (A–Z).");
+    if (!hasLower) tips.push("Add lowercase letters (a–z).");
+    if (!hasDigit) tips.push("Add digits (0–9).");
+    if (!hasSymbol) tips.push("Add symbols (!@#$…).");
+    if (repeatRatio < 0.6) tips.push("Increase character diversity.");
+  }
+
+  return {
+    score, label, hue, entropyBits: Math.round(entropyBits),
+    pool, tips: dedupeTips(tips),
+    classes: {hasLower,hasUpper,hasDigit,hasSymbol},
+    length: n, lengthScore, varietyScore, entropyBonus, penalties
+  };
+}
+
+function dedupeTips(arr){
+  const out = [];
+  const seen = new Set();
+  for (const t of arr){
+    if (!seen.has(t)){
+      out.push(t);
+      seen.add(t);
+    }
+  }
+  return out.slice(0,5); // slightly more
+}
+
+// Accurate time-to-crack estimate using BigInt for large values
+function estimateTime(entropyBits){
+  if (entropyBits <= 0) return "—";
+
+  const maxBits = 256;
+  entropyBits = Math.min(entropyBits, maxBits);
+
+  const guesses = 2n ** BigInt(entropyBits);
+  const perSecond = 10000000000n; // 10B
+  let seconds = guesses / perSecond;
+
+  if (seconds < 1n) return "< 1 second";
+
+  const units = [
+    {div: 31536000n * 1000000000000000n, name: "quadrillion year"},
+    {div: 31536000n * 1000000000000n, name: "trillion year"},
+    {div: 31536000n * 1000000000n, name: "billion year"},
+    {div: 31536000n * 1000000n, name: "million year"},
+    {div: 31536000n * 1000n, name: "thousand year"},
+    {div: 31536000n, name: "year"},
+    {div: 86400n, name: "day"},
+    {div: 3600n, name: "hour"},
+    {div: 60n, name: "minute"},
+    {div: 1n, name: "second"},
+  ];
+
+  let result = [];
+  for (const unit of units) {
+    if (seconds >= unit.div) {
+      const count = seconds / unit.div;
+      seconds %= unit.div;
+      const plural = count === 1n ? '' : 's';
+      result.push(`${count} ${unit.name}${plural}`);
+      if (result.length === 2) break;
+    }
+  }
+
+  return result.join(", ") || "< 1 second";
+}
+
+function updateUI(result){
+  const {score, label, hue, entropyBits, pool, tips, length, lengthScore, varietyScore, entropyBonus, penalties, classes} = result;
+
+  // Meter bar
+  el.bar.style.width = `${score}%`;
+  el.bar.style.filter = `hue-rotate(${hue-90}deg) saturate(1.3)`;
+
+  // Badge
+  el.label.textContent = `Strength: ${label}`;
+  el.scorePill.textContent = `${score} / 100`;
+  el.scorePill.style.borderColor = `hsla(${hue}, 80%, 60%, .4)`;
+
+  // Findings list
+  el.findings.innerHTML = "";
+  tips.forEach(t => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    el.findings.appendChild(li);
+  });
+
+  // Breakdown list
+  el.breakdown.innerHTML = "";
+  const breakdownItems = [
+    `Length: +${lengthScore}`,
+    `Variety: +${varietyScore}`,
+    `Entropy Bonus: +${entropyBonus}`,
+    `Penalties: ${penalties}`
+  ];
+  breakdownItems.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    el.breakdown.appendChild(li);
+  });
+
+  // Entropy + pool
+  el.entropy.textContent = entropyBits ? `${entropyBits} bits` : "—";
+  let poolDesc = [];
+  if (classes.hasLower) poolDesc.push("a–z");
+  if (classes.hasUpper) poolDesc.push("A–Z");
+  if (classes.hasDigit) poolDesc.push("0–9");
+  if (classes.hasSymbol) poolDesc.push("symbols");
+  el.pool.textContent = pool ? `Char set: ${pool} (${poolDesc.join(", ")})` : "Char set: —";
+
+  // Crack time
+  el.time.textContent = estimateTime(entropyBits);
+
+  // subtle background pulse based on strength
+  drawPulse(hue, score);
+
+  // shake on very weak short entries
+  if (length && score < 20){
+    el.inputWrap.classList.remove('shake');
+    void el.inputWrap.offsetWidth; // reflow
+    el.inputWrap.classList.add('shake');
+  }
+}
+
+function drawPulse(hue, score){
+  const c = el.pulse;
+  const ctx = c.getContext('2d');
+  const w = c.width = window.innerWidth;
+  const h = c.height = window.innerHeight;
+
+  const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)/8, w/2, h/2, Math.max(w,h)/1.2);
+  const alpha = Math.min(.35, Math.max(.08, score/280)); // 0.08 – 0.35
+  g.addColorStop(0, `hsla(${hue}, 95%, 55%, ${alpha})`);
+  g.addColorStop(1, `hsla(${hue}, 95%, 55%, 0)`);
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,w,h);
+  c.classList.add('active');
+}
+
+function handleInput(){
+  const pw = el.pwd.value || "";
+  const res = analyze(pw);
+  updateUI(res);
+}
+
+function toggleVisibility(){
+  const type = el.pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+  el.pwd.setAttribute('type', type);
+  el.toggle.textContent = type === 'password' ? 'Show' : 'Hide';
+  el.pwd.focus();
+}
+
+async function copyPassword(){
+  const pw = el.pwd.value;
+  if (!pw) return;
+  try {
+    await navigator.clipboard.writeText(pw);
+    el.copy.textContent = 'Copied!';
+    setTimeout(() => el.copy.textContent = 'Copy', 1500);
+  } catch (err) {
+    console.error('Failed to copy:', err);
+  }
+}
+
+function randCharFrom(set){
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return set[array[0] % set.length];
+}
+
+function generatePassword(){
+  const lowers = "abcdefghijklmnopqrstuvwxyz";
+  const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits = "0123456789";
+  const symbols = "!@#$%^&*()-_=+[]{};:,.?/";
+
+  // More unique: random length between 14-20, optional exclude symbols
+  const targetLen = Math.floor(Math.random() * 7) + 14; // 14-20
+  const includeAll = Math.random() > 0.1; // 90% chance to include all classes
+
+  let charSets = [lowers, uppers, digits];
+  if (includeAll) charSets.push(symbols);
+
+  // Ensure one from each selected
+  let arr = charSets.map(set => randCharFrom(set));
+
+  const all = charSets.join('');
+  while (arr.length < targetLen) arr.push(randCharFrom(all));
+
+  // Shuffle
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  el.pwd.value = arr.join('');
+  handleInput();
+}
+
+// events
+el.pwd.addEventListener('input', handleInput);
+el.toggle.addEventListener('click', toggleVisibility);
+el.copy.addEventListener('click', copyPassword);
+el.gen.addEventListener('click', generatePassword);
+
+// init
+handleInput();
+</script>
+</body>
+</html>
